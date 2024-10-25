@@ -27,6 +27,8 @@
             <div class="col-md-8">
                 <form id="testForm" method="POST" action="{{ route('test.submit') }}">
                     @csrf
+                    <input type="hidden" id="countdownInput" name="total_time" value="30:00">
+
                     <div class="card-body">
                         {{-- Display questions --}}
                         @foreach ($questions as $index => $question)
@@ -141,6 +143,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             let timeRemaining = 30 * 60; // 30 minutes in seconds
             const countdownDisplay = document.getElementById('countdown');
+            const countdownInput = document.getElementById('countdownInput');
 
             const timerInterval = setInterval(() => {
                 const minutes = Math.floor(timeRemaining / 60);
@@ -148,12 +151,14 @@
 
                 countdownDisplay.textContent =
                     `Time Remaining: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                countdownInput.value =
+                `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`; // Update input value
 
                 if (timeRemaining <= 0) {
                     clearInterval(timerInterval);
                     alert('Time is up! Submitting your answers.');
                     document.getElementById('testForm')
-                        .submit(); // Automatic form submission when time is up
+                .submit(); // Automatic form submission when time is up
                 }
 
                 timeRemaining--;
@@ -163,9 +168,6 @@
 @endpush
 
 @section('css')
-    <style>
-        /* Your existing styles here */
-    </style>
 
     <style>
         /* Timer Bar Styling */

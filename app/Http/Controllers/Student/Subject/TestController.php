@@ -6,6 +6,7 @@ use App\Models\Question;
 use App\Models\TestResult;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 
 class TestController extends Controller
 {
@@ -23,8 +24,6 @@ class TestController extends Controller
         return view('student.Test.test-page', $data);
     }
 
-
-
     public function submit(Request $request)
     {
         // Retrieve submitted answers
@@ -32,20 +31,20 @@ class TestController extends Controller
         if (empty($submittedAnswers)) {
             dd('No answers were submitted. Please check the form data.');
         }
-    
+
         // Fetch all questions and their options
         $questions = Question::whereIn('id', array_keys($submittedAnswers))->get();
 
-        $total_question_no = $questions->count();
+        $totalQuestionNo = $questions->count();
         $correctAnswersCount = 0;
         $results = [];
-    
+
         // Loop through each question to check if the answer is correct
         foreach ($questions as $question) {
             $correctAnswer = $question->answer; // e.g., 'A', 'B', etc.
-            $submittedAnswer = $submittedAnswers[$question->id]; // Prevent undefined index error
+            $submittedAnswer = $submittedAnswers[$question->id];
             $isCorrect = $submittedAnswer === $correctAnswer;
-    
+
             if ($isCorrect) {
                 $correctAnswersCount++;
             }
@@ -53,21 +52,46 @@ class TestController extends Controller
             // Populate results data structure
             $results[] = [
                 'question' => $question->question,
-                'options' => $question->options, // Accessing JSON directly
+                'options' => $question->options,
                 'user_answer' => $submittedAnswer,
                 'answer' => $correctAnswer,
                 'is_correct' => $isCorrect,
                 'reason' => $question->reason ?? 'No reason provided',
             ];
         }
-    
+
         // Calculate score as percentage
-        $score = ($correctAnswersCount / $questions->count()) * 100;
-    
+        $score = ($correctAnswersCount / $totalQuestionNo) * 100;
+
+        // Calculate additional data for test results
+        $wrongAnswersCount = $totalQuestionNo - $correctAnswersCount;
+        // Convert countdown time ("mm:ss") to seconds
+        $remainingTime = $request->input('total_time', '30:00'); // e.g., "29:53"
+        [$minutes, $seconds] = explode(':', $remainingTime);
+        $remainingTimeInSeconds = ($minutes * 60) + $seconds;
+
+        // Calculate total time used as 1800 (30 minutes) minus the remaining time
+        $totalTimeUsed = 1800 - $remainingTimeInSeconds;
+        $avgTimePerQuestion = $totalQuestionNo ? ($totalTimeUsed / $totalQuestionNo) : 0;
+        // save data to TestResult
+        $testResult = new TestResult();
+        $testResult->user_id = Auth::id();
+        $testResult->username = Auth::user()->name;
+        $testResult->total_time = $totalTimeUsed;
+        $testResult->correct_answers = $correctAnswersCount;
+        $testResult->wrong_answers = $wrongAnswersCount;
+        $testResult->avg_time_per_question = round($avgTimePerQuestion, 2);
+        $testResult->save();
+
+
+
+
+
         // Return the view with the score and results
         return view('student.Test.test-result-page', compact('score', 'results'));
     }
-    
+
+
 
 
 
