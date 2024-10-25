@@ -2,9 +2,13 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
+use Carbon\Carbon;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\User;
+use App\Models\Question;
+use Faker\Factory as Faker;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class DatabaseSeeder extends Seeder
 {
@@ -17,7 +21,30 @@ class DatabaseSeeder extends Seeder
 
         User::factory()->create([
             'name' => 'Test User',
-            'email' => 'test@example.com',
+            'email' => 'ashish@test.com',
         ]);
+
+        $faker = \Faker\Factory::create();
+
+        // Seed Questions
+        $questionCount = 1000; // Define how many questions you want
+
+        for ($k = 0; $k < $questionCount; $k++) {
+            $options = [
+                'A' => $faker->sentence(5),
+                'B' => $faker->sentence(5),
+                'C' => $faker->sentence(5),
+                'D' => $faker->sentence(5),
+            ];
+        
+            $answer = $faker->randomElement(['A', 'B', 'C', 'D']);
+        
+            Question::create([
+                'question' => $faker->sentence(10),
+                'options' => json_encode($options), // Explicitly encode to JSON
+                'answer' => $answer,
+                'reason' => $faker->paragraph,
+            ]);
+        }
     }
 }

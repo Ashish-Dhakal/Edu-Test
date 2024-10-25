@@ -1,6 +1,5 @@
 @extends('layouts.app')
 
-{{-- Customize layout sections --}}
 @section('content_header')
     <!-- Timer and Attempt Counter Bar -->
     <div class="row mb-3 w-100">
@@ -10,10 +9,10 @@
                     <button id="submit-test-btn" class="btn btn-success">Submit Test</button>
                 </div>
                 <div>
-                    <span id="timer-display">Time: 00:00</span>
+                    <div id="countdown">Time Remaining: 30:00</div>
                 </div>
                 <div>
-                    <span id="attempt-counter">0/3 Attempted</span>
+                    <div id="clickedQuestionsCount">Questions Answered: 0</div>
                 </div>
             </div>
         </div>
@@ -27,35 +26,12 @@
             {{-- Left side: list of questions and options --}}
             <div class="col-md-8">
                 <div class="card-body">
-                    @php
-                        $questions = [
-                            [
-                                'question' => 'What is the capital of France?',
-                                'options' => ['Paris', 'London', 'Berlin', 'Rome'],
-                            ],
-                            [
-                                'question' => 'What is the largest planet in our solar system?',
-                                'options' => ['Earth', 'Mars', 'Jupiter', 'Saturn'],
-                            ],
-                            // Add more questions
-                        ];
-
-                        // Generate a large number of dummy questions for testing
-                        for ($i = 3; $i <= 50; $i++) {
-                            $questions[] = [
-                                'question' => "Question {$i}?",
-                                'options' => ['Option A', 'Option B', 'Option C', 'Option D'],
-                            ];
-                        }
-                    @endphp
-
                     {{-- Display questions --}}
                     @foreach ($questions as $index => $question)
-                        <div class="mb-4 question-container {{ $index === 0 ? '' : 'd-none' }}"
-                            id="question-{{ $index + 1 }}">
-                            <strong class="question-title">{{ $index + 1 }}. {{ $question['question'] }}</strong>
+                        <div class="mb-4 question-container d-none" id="question-{{ $index + 1 }}">
+                            <strong class="question-title">{{ $loop->iteration }}: {{ $question->question }}</strong>
                             <ul class="list-unstyled">
-                                @foreach ($question['options'] as $optionIndex => $option)
+                                @foreach (json_decode($question->options, true) as $optionIndex => $option)
                                     <li class="option-item">
                                         <label class="custom-radio-label">
                                             <input type="radio" name="question_{{ $index }}"
@@ -96,24 +72,19 @@
 
 @stop
 
-{{-- Push extra scripts --}}
 @push('js')
     <script>
         let currentQuestion = 1;
         const totalQuestions = {{ count($questions) }};
 
         function updateQuestionVisibility() {
-            // Hide all questions
             document.querySelectorAll('.question-container').forEach(q => q.classList.add('d-none'));
-            // Show current question
             document.querySelector('#question-' + currentQuestion).classList.remove('d-none');
 
-            // Disable/Enable Prev/Next buttons
             document.getElementById('prev-btn').disabled = currentQuestion === 1;
             document.getElementById('next-btn').disabled = currentQuestion === totalQuestions;
         }
 
-        // Next Button Click
         document.getElementById('next-btn').addEventListener('click', function() {
             if (currentQuestion < totalQuestions) {
                 currentQuestion++;
@@ -121,7 +92,6 @@
             }
         });
 
-        // Previous Button Click
         document.getElementById('prev-btn').addEventListener('click', function() {
             if (currentQuestion > 1) {
                 currentQuestion--;
@@ -129,7 +99,6 @@
             }
         });
 
-        // Question Number Click
         document.querySelectorAll('.question-number-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 const questionNumber = this.innerText;
@@ -138,17 +107,11 @@
             });
         });
 
-        // Initial call to display the first question
         updateQuestionVisibility();
-
-
-
 
         document.querySelectorAll('.answer-option').forEach(option => {
             option.addEventListener('change', function() {
                 let questionNumber = this.getAttribute('data-question-number');
-
-                // Add the 'btn-answered' class to the corresponding question number button
                 let questionNumberBtn = document.querySelector('#question-number-' + questionNumber);
                 if (questionNumberBtn) {
                     questionNumberBtn.classList.add('btn-answered');
@@ -156,11 +119,33 @@
             });
         });
     </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let timeRemaining = 30 * 60; // 30 minutes in seconds
+            const countdownDisplay = document.getElementById('countdown');
+
+            const timerInterval = setInterval(() => {
+                const minutes = Math.floor(timeRemaining / 60);
+                const seconds = timeRemaining % 60;
+
+                countdownDisplay.textContent =
+                    `Time Remaining: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+
+                if (timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    alert('Time is up! Submitting your answers.');
+                    // Submit the form automatically or handle time-up logic
+                    // document.getElementById('testForm').submit(); // Example form submission
+                }
+
+                timeRemaining--;
+            }, 1000);
+        });
+    </script>
 @endpush
 
-
 @section('css')
-
     <style>
         /* Timer Bar Styling */
         .timer-bar {
@@ -252,6 +237,7 @@
             background-color: #f8f9fa;
             transition: all 0.3s ease;
             border: 2px solid transparent;
+            row-gap: 5px;
         }
 
         .custom-radio-label:hover {

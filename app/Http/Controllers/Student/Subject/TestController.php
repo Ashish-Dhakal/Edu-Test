@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers\Student\Subject;
 
-use App\Http\Controllers\Controller;
+use App\Models\Question;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 
 class TestController extends Controller
 {
@@ -15,8 +16,10 @@ class TestController extends Controller
         return view('student.Test.test');
     }
 
-    public function subjectTest(){
-        return view('student.Test.test-page');
+    public function subjectTest()
+    {
+        $data['questions'] =Question::inRandomOrder()->limit(50)->get();
+        return view('student.Test.test-page',$data);
     }
 
     /**
