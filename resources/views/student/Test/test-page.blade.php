@@ -25,33 +25,40 @@
         <div class="row">
             {{-- Left side: list of questions and options --}}
             <div class="col-md-8">
-                <div class="card-body">
-                    {{-- Display questions --}}
-                    @foreach ($questions as $index => $question)
-                        <div class="mb-4 question-container d-none" id="question-{{ $index + 1 }}">
-                            <strong class="question-title">{{ $loop->iteration }}: {{ $question->question }}</strong>
-                            <ul class="list-unstyled">
-                                @foreach (json_decode($question->options, true) as $optionIndex => $option)
-                                    <li class="option-item">
-                                        <label class="custom-radio-label">
-                                            <input type="radio" name="question_{{ $index }}"
-                                                value="{{ $option }}" class="answer-option"
-                                                id="question_{{ $index }}_option_{{ $optionIndex }}"
-                                                data-question-number="{{ $index + 1 }}">
-                                            <span class="option-text">{{ $option }}</span>
-                                        </label>
-                                    </li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    @endforeach
+                <form id="testForm" method="POST" action="{{ route('test.submit') }}">
+                    @csrf
+                    <div class="card-body">
+                        {{-- Display questions --}}
+                        @foreach ($questions as $index => $question)
+                            <div class="mb-4 question-container d-none" id="question-{{ $index + 1 }}">
+                                <strong class="question-title">{{ $loop->iteration }}: {{ $question->question }}</strong>
+                                <ul class="list-unstyled">
+                                    @if (is_array($question->options))
+                                        @foreach ($question->options as $optionIndex => $option)
+                                            <li class="option-item">
+                                                <label class="custom-radio-label">
+                                                    <input type="radio" name="answers[{{ $question->id }}]"
+                                                        value="{{ $optionIndex }}" class="answer-option"
+                                                        id="question_{{ $index }}_option_{{ $optionIndex }}"
+                                                        data-question-number="{{ $index + 1 }}">
+                                                    <span class="option-text">{{ $option }}</span>
+                                                </label>
+                                            </li>
+                                        @endforeach
+                                    @else
+                                        <li class="option-item">Options are not available.</li>
+                                    @endif
+                                </ul>
+                            </div>
+                        @endforeach
 
-                    {{-- Navigation buttons --}}
-                    <div class="d-flex justify-content-between">
-                        <button class="btn btn-secondary" id="prev-btn" disabled>Previous</button>
-                        <button class="btn btn-primary" id="next-btn">Next</button>
+                        {{-- Navigation buttons --}}
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-secondary" id="prev-btn" disabled>Previous</button>
+                            <button type="button" class="btn btn-primary" id="next-btn">Next</button>
+                        </div>
                     </div>
-                </div>
+                </form>
             </div>
 
             {{-- Right side: list of question numbers --}}
@@ -80,6 +87,8 @@
         function updateQuestionVisibility() {
             document.querySelectorAll('.question-container').forEach(q => q.classList.add('d-none'));
             document.querySelector('#question-' + currentQuestion).classList.remove('d-none');
+
+
 
             document.getElementById('prev-btn').disabled = currentQuestion === 1;
             document.getElementById('next-btn').disabled = currentQuestion === totalQuestions;
@@ -118,6 +127,14 @@
                 }
             });
         });
+
+        // Submit functionality with confirmation
+        document.getElementById('submit-test-btn').addEventListener('click', function(e) {
+            e.preventDefault(); // Prevent immediate form submission
+            if (confirm("Are you sure you want to submit your answers?")) {
+                document.getElementById('testForm').submit();
+            }
+        });
     </script>
 
     <script>
@@ -135,8 +152,8 @@
                 if (timeRemaining <= 0) {
                     clearInterval(timerInterval);
                     alert('Time is up! Submitting your answers.');
-                    // Submit the form automatically or handle time-up logic
-                    // document.getElementById('testForm').submit(); // Example form submission
+                    document.getElementById('testForm')
+                        .submit(); // Automatic form submission when time is up
                 }
 
                 timeRemaining--;
@@ -146,6 +163,10 @@
 @endpush
 
 @section('css')
+    <style>
+        /* Your existing styles here */
+    </style>
+
     <style>
         /* Timer Bar Styling */
         .timer-bar {

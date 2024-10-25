@@ -25,7 +25,12 @@ Route::get('/subject/subject-detail' , [SubjectController::class , 'detail'])->n
 
 // route for subject test
 Route::get('/test' , [TestController::class , 'index'])->name('test.index');
+Route::post('/test/submit', [TestController::class, 'submit'])->name('test.submit');
+
+
 Route::get('/test/subject' , [TestController::class , 'subjectTest'])->name('subjecttest');// adding subject-name slug later
+
+
 
 
 });
