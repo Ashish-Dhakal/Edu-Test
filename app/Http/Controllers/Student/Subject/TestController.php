@@ -11,6 +11,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use PDO;
 
+use function PHPUnit\Framework\isEmpty;
+use function PHPUnit\Framework\isNull;
+
 class TestController extends Controller
 {
     /**
@@ -47,10 +50,7 @@ class TestController extends Controller
             $data['questions'] = Question::inRandomOrder()->limit(50)->get();
             return view('student.Test.test-page', $data);
         } else {
-            // dd('test ko else');
-            // return redirect()->back();
-            return redirect()->route('subjecttest');
-
+            return redirect()->route('home');
         }
     }
 
@@ -175,13 +175,20 @@ class TestController extends Controller
 
 
             $testResult = TestResult::find($id); // Replace with your actual model and ID
+            if (
+                is_null($testResult->total_time) &&
+                is_null($testResult->correct_answers) &&
+                is_null($testResult->wrong_answers) &&
+                is_null($testResult->avg_time_per_question)
+            ) {
 
-            if ($testResult) {
                 $testResult->total_time = $totalTimeUsed;
                 $testResult->correct_answers = $correctAnswersCount;
                 $testResult->wrong_answers = $wrongAnswersCount;
                 $testResult->avg_time_per_question = round($avgTimePerQuestion, 2);
                 $testResult->save();
+            } else {
+                return redirect()->route('home');
             }
             // Save to test_results table
 

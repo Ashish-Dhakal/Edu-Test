@@ -45,4 +45,10 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    // user has many testresult
+    public function testResult()
+    {
+        return $this->hasMany(TestResult::class);
+    }
 }
