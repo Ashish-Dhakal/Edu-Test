@@ -41,7 +41,7 @@ class DatabaseSeeder extends Seeder
         
             Question::create([
                 'question' => $faker->sentence(10),
-                'options' => json_encode($options), // Explicitly encode to JSON
+                'options' => $options, // Store the array directly
                 'answer' => $answer,
                 'reason' => $faker->paragraph,
             ]);
