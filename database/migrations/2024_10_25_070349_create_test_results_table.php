@@ -15,10 +15,10 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('username');
-            $table->integer('total_time'); // in seconds
-            $table->integer('correct_answers');
-            $table->integer('wrong_answers');
-            $table->float('avg_time_per_question', 8, 2); // in seconds
+            $table->integer('total_time')->nullable(); // in seconds
+            $table->integer('correct_answers')->nullable();
+            $table->integer('wrong_answers')->nullable();
+            $table->float('avg_time_per_question', 8, 2)->nullable(); // in seconds
             $table->timestamps();
         });
     }

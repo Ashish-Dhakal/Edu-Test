@@ -37,7 +37,9 @@
 
 
 
-                        <a href="{{route('subjecttest')}}" class="btn btn-primary btn-lg mt-2">Start Test</a>
+                       
+                        <a href="{{ route('subjecttest', $testResultId) }}" class="btn btn-primary btn-lg mt-2">Start Test</a>
+
 
                         <h4 class="mt-4">General Instructions</h4>
                         <ul class="list-unstyled text-justify">

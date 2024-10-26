@@ -9,7 +9,7 @@ use App\Models\ResultResponse;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-
+use PDO;
 
 class TestController extends Controller
 {
@@ -18,13 +18,40 @@ class TestController extends Controller
      */
     public function index()
     {
-        return view('student.Test.test-info');
+        $username = Auth::user()->name;
+        $user_id = Auth::user()->id;
+        $test_result = new TestResult();
+        $test_result->user_id = $user_id;
+        $test_result->username = $username;
+        $test_result->save();
+
+        $testResultId = $test_result->id; // This will give you the ID of the saved record
+
+
+        // dd($testResultId);
+
+        return view('student.Test.test-info', ['testResultId' => $testResultId]);
     }
 
-    public function subjectTest()
+    public function subjectTest($id)
     {
-        $data['questions'] = Question::inRandomOrder()->limit(50)->get();
-        return view('student.Test.test-page', $data);
+        $data['test_id'] = $id;
+        $result = TestResult::find($id); // Replace with your actual model and ID
+
+        if (
+
+            is_null($result->total_time) && is_null($result->correct_answers)
+            && is_null($result->wrong_answers) && is_null($result->avg_time_per_question)
+        ) {
+            // dd("test ko if");
+            $data['questions'] = Question::inRandomOrder()->limit(50)->get();
+            return view('student.Test.test-page', $data);
+        } else {
+            // dd('test ko else');
+            // return redirect()->back();
+            return redirect()->route('subjecttest');
+
+        }
     }
 
     // public function submit(Request $request)
@@ -100,8 +127,9 @@ class TestController extends Controller
 
 
 
-    public function submit(Request $request)
+    public function submit(Request $request, $id)
     {
+        // dd($id);
         // Start a database transaction
         DB::beginTransaction();
 
@@ -145,15 +173,18 @@ class TestController extends Controller
             $totalTimeUsed = 1800 - $remainingTimeInSeconds;
             $avgTimePerQuestion = $totalQuestionNo ? ($totalTimeUsed / $totalQuestionNo) : 0;
 
+
+            $testResult = TestResult::find($id); // Replace with your actual model and ID
+
+            if ($testResult) {
+                $testResult->total_time = $totalTimeUsed;
+                $testResult->correct_answers = $correctAnswersCount;
+                $testResult->wrong_answers = $wrongAnswersCount;
+                $testResult->avg_time_per_question = round($avgTimePerQuestion, 2);
+                $testResult->save();
+            }
             // Save to test_results table
-            $testResult = new TestResult();
-            $testResult->user_id = Auth::id();
-            $testResult->username = Auth::user()->name;
-            $testResult->total_time = $totalTimeUsed;
-            $testResult->correct_answers = $correctAnswersCount;
-            $testResult->wrong_answers = $wrongAnswersCount;
-            $testResult->avg_time_per_question = round($avgTimePerQuestion, 2);
-            $testResult->save();
+
 
             $testId = $testResult->id;
 

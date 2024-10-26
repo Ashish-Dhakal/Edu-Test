@@ -25,7 +25,7 @@
         <div class="row">
             {{-- Left side: list of questions and options --}}
             <div class="col-md-8">
-                <form id="testForm" method="POST" action="{{ route('test.submit') }}">
+                <form id="testForm" method="POST" action="{{ route('test.submit',$test_id) }}">
                     @csrf
                     <input type="hidden" id="countdownInput" name="total_time" value="30:00">
 
